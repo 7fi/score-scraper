@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import requests
 from csv import writer
 
-# "nwisa-girls-qualifiers"
-regatta_names = ["pontiac-bay-regional-south-regional"]
+regatta_names = ["nwisa-girls-qualifiers",
+                 "pontiac-bay-regional-south-regional", "north-regionals"]
 
 printFormat = True
 
@@ -32,17 +32,17 @@ class person:
         self.pos = position
         self.races = []
 
-        if len(races) != 0:
+        if races != [['']] and len(races) != 0:
             for i in range(len(races)):
                 if len(races[i]) > 1:
                     for j in range(int(races[i][0]), int(races[i][1]) + 1):
                         self.races.append(j)
                 else:
                     self.races.append(int(races[i][0]))
-        # print(self.races)
+            # print(self.races)
 
     def __repr__(self):
-        return f"{self.name} {self.pos} {self.races}"
+        return f"{self.name}{self.races}"
 
 
 for regatta in regatta_names:
@@ -112,32 +112,28 @@ for regatta in regatta_names:
             teamATotal = int(scoreData[(i*3) - 3].contents[5 + raceCount].text)
             teamBTotal = int(scoreData[(i*3) - 2].contents[5 + raceCount].text)
 
-            allNames = a.find_all('td', class_="teamname")
-            teamNameEl = [i for i in allNames if i.text == teamName][0]
-            # print(teamNameEl.parent.previous_sibling.find_all(
-            #     'td', class_="skipper"))
             teamASkippers = []
             teamACrews = []
             teamBSkippers = []
             teamBCrews = []
 
+            allNames = a.find_all('td', class_="teamname")
+            teamNameEl = [i for i in allNames if i.text == teamName][0]
+
             for skipper in teamNameEl.parent.previous_sibling.find_all('td', class_="skipper"):
                 if skipper.parent.previous_sibling and skipper.parent.previous_sibling.find_all('td', class_="skipper"):
                     skipper2 = skipper.parent.previous_sibling.find(
                         'td', class_="skipper")
-                    # print("SKIPPER2", skipper2.text)
                     races = skipper2.next_sibling.text.split(",")
                     races = [i.split("-", 1) for i in races]
                     teamASkippers.append(
                         person(skipper2.text.split(" '")[0], "skipper", races))
-                # print(skipper.text)
                 races = skipper.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
                 teamASkippers.append(
                     person(skipper.text.split(" '")[0], "skipper", races))
 
             for crew in teamNameEl.parent.find_all('td', class_="crew"):
-                # print(skipper.text)
                 races = crew.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
                 teamACrews.append(
@@ -145,7 +141,6 @@ for regatta in regatta_names:
                 if crew.parent.next_sibling and crew.parent.next_sibling.find_all('td', class_="crew"):
                     crew2 = crew.parent.next_sibling.find(
                         'td', class_="crew")
-                    # print("SKIPPER2", skipper2.text)
                     races = crew2.next_sibling.text.split(",")
                     races = [i.split("-", 1) for i in races]
                     teamACrews.append(
@@ -153,7 +148,6 @@ for regatta in regatta_names:
                     if crew2.parent.next_sibling and crew2.parent.next_sibling.find_all('td', class_="crew"):
                         crew3 = crew2.parent.next_sibling.find(
                             'td', class_="crew")
-                        # print("SKIPPER2", skipper2.text)
                         races = crew3.next_sibling.text.split(",")
                         races = [i.split("-", 1) for i in races]
                         teamACrews.append(
@@ -166,19 +160,16 @@ for regatta in regatta_names:
                 if skipper.parent.previous_sibling and skipper.parent.previous_sibling.find_all('td', class_="skipper"):
                     skipper2 = skipper.parent.previous_sibling.find(
                         'td', class_="skipper")
-                    # print("SKIPPER2", skipper2.text)
                     races = skipper2.next_sibling.text.split(",")
                     races = [i.split("-", 1) for i in races]
                     teamBSkippers.append(
                         person(skipper2.text.split(" '")[0], "skipper", races))
-                # print(skipper.text)
                 races = skipper.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
                 teamBSkippers.append(
                     person(skipper.text.split(" '")[0], "skipper", races))
 
             for crew in teamNameEl.parent.find_all('td', class_="crew"):
-                # print(skipper.text)
                 races = crew.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
                 teamBCrews.append(
@@ -186,7 +177,6 @@ for regatta in regatta_names:
                 if crew.parent.next_sibling and crew.parent.next_sibling.find_all('td', class_="crew"):
                     crew2 = crew.parent.next_sibling.find(
                         'td', class_="crew")
-                    # print("crew", skipper2.text)
                     races = crew2.next_sibling.text.split(",")
                     races = [i.split("-", 1) for i in races]
                     teamBCrews.append(
@@ -194,57 +184,10 @@ for regatta in regatta_names:
                     if crew2.parent.next_sibling and crew2.parent.next_sibling.find_all('td', class_="crew"):
                         crew3 = crew2.parent.next_sibling.find(
                             'td', class_="crew")
-                        # print("crew 3", crew3.text)
                         races = crew3.next_sibling.text.split(",")
                         races = [i.split("-", 1) for i in races]
                         teamBCrews.append(
                             person(crew3.text.split(" '")[0], "crew", races))
-
-            # for teamName in sailors.find('table', class_="sailors").find_all('td', class_="teamname"):
-            #     print(f"{teamName}found")
-
-            # bruh = sailors.find_all('td', class_="teamname")
-            # nameEl = [i for i in bruh if i.text == teamName][0]
-            # # print(nameEl)
-
-            # bStartPoint = None
-            # for sibling in nameEl.next_sibling.next_elements:
-            #     # print(str(type(sibling)) == "<class 'bs4.element.Tag'>")
-            #     if str(type(sibling)) == "<class 'bs4.element.Tag'>" and sibling.has_attr('class') and sibling['class'] == ["division-cell"]:
-            #         bStartPoint = sibling
-            #         break
-            #     if str(type(sibling)) == "<class 'bs4.element.Tag'>" and sibling.has_attr('class') and sibling['class'] == ["races"]:
-            #         name = repr(sibling.previous_sibling.text.split(" '")[0])
-            #         if sibling.parent.contents[4] == sibling:
-            #             pos = "Skipper"
-
-            #         races = sibling.text.split(",")
-            #         races = [i.split("-", 1) for i in races]
-            #         teamASailors.append(person(name, None, races))
-
-            # print(teamACrews)
-
-            # for sibling in bStartPoint.next_elements:
-            #     # print(str(type(sibling)) == "<class 'bs4.element.Tag'>")
-            #     if str(type(sibling)) == "<class 'bs4.element.Tag'>" and sibling.has_attr('class') and sibling['class'] == ["schoolname"]:
-            #         break
-            #     if str(type(sibling)) == "<class 'bs4.element.Tag'>" and sibling.has_attr('class') and sibling['class'] == ["races"]:
-            #         name = repr(sibling.previous_sibling.text.split(" '")[0])
-            #         races = sibling.text.split(",")
-            #         races = [i.split("-", 1) for i in races]
-            #         teamBSailors.append(person(name, None, races))
-
-            # print(teamBSailors)
-
-            # print(sailors.find(
-            #     'td', class_="races").previous_sibling.text.split(" '")[0],
-            #     sailors.find(
-            #     'td', class_="races").text.split(",")
-            # )
-
-            # print(sailors.find('table', class_="sailors").find('td', class_="teamname").next_sibling.next_sibling.next_sibling.text.split(" '")[0])
-
-            # print(teamHome, teamName, teamAScores, teamBScores, teamATotal, teamBTotal)
 
             if printFormat:
                 thewriter.writerow([teamHome, "A", ', '.join(
@@ -255,7 +198,7 @@ for regatta in regatta_names:
                     map(str, teamBScores)), ', '.join(
                     map(str, teamBSkippers)), ', '.join(
                     map(str, teamBCrews)), teamBTotal])
-                # thewriter.writerow([])
+                thewriter.writerow([None])
             else:
                 thewriter.writerow(
                     [teamHome, teamName, ', '.join(map(str, teamAScores)), ', '.join(map(str, teamBScores)), ', '.join(map(str, teamASkippers)), ', '.join(map(str, teamACrews)), ', '.join(map(str, teamBSkippers)), ', '.join(map(str, teamBCrews)), teamATotal, teamBTotal])
