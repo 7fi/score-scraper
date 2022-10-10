@@ -22,18 +22,22 @@ class team:
 
 
 for regatta in regatta_names:
-    # url = "https://scores.hssailing.org/f22/pontiac-bay-regional-south-regional/full-scores/"
+
+    # full scores
     url = f"https://scores.hssailing.org/f22/{regatta}/full-scores/"
-
     page = requests.get(url)
-    print(page)
+    fullScores = BeautifulSoup(page.content, 'html.parser')
 
-    soup = BeautifulSoup(page.content, 'html.parser')
-    header = soup.find('table', class_="results").find_all(
-        'th', class_="right")
+    # sailors
+    url = f"https://scores.hssailing.org/f22/{regatta}/sailors/"
+    page = requests.get(url)
+    sailors = BeautifulSoup(page.content, 'html.parser')
+
+    scoreData = fullScores.find('table', class_="results").contents[1].contents
+    sailorData = sailors.find('table', class_="sailors").contents[1].contents
+    header = fullScores.find(
+        'table', class_="results").find_all('th', class_="right")
     raceCount = int(header[len(header) - 2].text)
-
-    scoreData = soup.find('table', class_="results").contents[1].contents
 
     teamCount = int(len(scoreData) / 3)
     print(teamCount)
@@ -41,14 +45,16 @@ for regatta in regatta_names:
     teams = []
 
     with open(f'{regatta}-scores.csv', 'w', encoding='utf8', newline='') as f:
+        # CSV Stuff
         thewriter = writer(f)
-
         if printFormat:
             header = ["Team", "Div", "Scores", "Total"]
         else:
             header = ["Team Home", "Team Name", "Team A Scores",
                       "Team B Scores", "Team A Total", "Team B Total"]
         thewriter.writerow(header)
+
+        # loop through teams
         for i in range(1, teamCount):
             teamHome = scoreData[(i*3) - 3].find('a').text
             teamName = scoreData[(i*3) - 2].contents[2].text
@@ -69,8 +75,19 @@ for regatta in regatta_names:
 
             teamATotal = int(scoreData[(i*3) - 3].contents[5 + raceCount].text)
             teamBTotal = int(scoreData[(i*3) - 2].contents[5 + raceCount].text)
-            # teamHome = teamAScores.find('', class_="")
-            # print(teamHome, teamName, teamAScores, teamBScores, teamATotal, teamBTotal)
+
+            teamAskippers = []
+            # for teamName in sailors.find('table', class_="sailors").find_all('td', class_="teamname"):
+            #     print(f"{teamName}found")
+
+            for sibling in sailors.find('table', class_="sailors").find('td', class_="teamname").next_siblings:
+                if not sibling.has_attr('class'):
+                    print(repr(sibling.text.split(" '")[0]))
+                elif sibling['class'] == "races":
+                    print(repr(sibling.text.split("-")))
+                # print(sailors.find('table', class_="sailors").find('td', class_="teamname").next_sibling.next_sibling.next_sibling.text.split(" '")[0])
+
+                # print(teamHome, teamName, teamAScores, teamBScores, teamATotal, teamBTotal)
 
             if printFormat:
                 thewriter.writerow([teamHome, "A", ', '.join(
@@ -88,4 +105,4 @@ for regatta in regatta_names:
             thewriter.writerow(["Race Count: ", raceCount])
             thewriter.writerow(["Team Count: ", teamCount])
 
-    print(teams)
+    # print(teams)
