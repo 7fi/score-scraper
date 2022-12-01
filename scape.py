@@ -1,12 +1,16 @@
-from itertools import tee
+from csv import writer
+import csv
+# from itertools import tee
 from bs4 import BeautifulSoup
 import requests
-from csv import writer
+import numpy as np
+import matplotlib.pyplot as plt
 
-regatta_names = ["nwisa-girls-qualifiers",
+regatta_names = ["cascadia-cup-gold", "cascadia-cup-silver", "2022-issa-pcisa-all-girls-invitational", "nwisa-girls-qualifiers",
                  "pontiac-bay-regional-south-regional", "north-regionals"]
+# regatta_names = ["2022-atlantic-coast"]
 
-printFormat = True
+printFormat = False
 
 
 class team:
@@ -76,7 +80,7 @@ for regatta in regatta_names:
     raceCount = int(header[len(header) - 2].text)
 
     teamCount = int(len(scoreData) / 3)
-    print(teamCount)
+    # print(teamCount)
 
     teams = []
 
@@ -208,5 +212,3 @@ for regatta in regatta_names:
         if printFormat:
             thewriter.writerow(["Race Count: ", raceCount])
             thewriter.writerow(["Team Count: ", teamCount])
-
-    print(teams)
