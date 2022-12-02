@@ -196,10 +196,10 @@ for i, regatta in enumerate(regatta_names):
                     'td', class_="skipper")
                 races = skipper2.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
-                addPerson(skipper2.text.split(" '")[0],"Skipper",'B', teamHome, races, teamAScores, teamHomes, betterVenue)
+                addPerson(skipper2.text.split(" '")[0],"Skipper",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
             races = skipper.next_sibling.text.split(",")
             races = [i.split("-", 1) for i in races]
-            addPerson(skipper.text.split(" '")[0],"Skipper",'A', teamHome, races, teamAScores, teamHomes, betterVenue)
+            addPerson(skipper.text.split(" '")[0],"Skipper",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
 
         for crew in teamNameEl.parent.find_all('td', class_="crew"):
             races = crew.next_sibling.text.split(",")
@@ -210,14 +210,14 @@ for i, regatta in enumerate(regatta_names):
                     'td', class_="crew")
                 races = crew2.next_sibling.text.split(",")
                 races = [i.split("-", 1) for i in races]
-                addPerson(crew2.text.split(" '")[0],"Crew",'B', teamHome, races, teamAScores, teamHomes, betterVenue)
+                addPerson(crew2.text.split(" '")[0],"Crew",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
 
                 if crew2.parent.next_sibling and crew2.parent.next_sibling.find_all('td', class_="crew"):
                     crew3 = crew2.parent.next_sibling.find(
                         'td', class_="crew")
                     races = crew3.next_sibling.text.split(",")
                     races = [i.split("-", 1) for i in races]
-                    addPerson(crew3.text.split(" '")[0],"Crew",'B', teamHome, races, teamAScores, teamHomes, betterVenue)
+                    addPerson(crew3.text.split(" '")[0],"Crew",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
 
 def compare(first, second):
     # print("First", first, "Second", second)
@@ -237,7 +237,7 @@ def compare(first, second):
     else:
         return 0
 
-names = {"Elliott Chalcraft": "#1e7536", 'Carter Anderson':"#3684a3"}
+names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3"}
 Type = "points"
 
 prev = 0
