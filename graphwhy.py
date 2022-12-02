@@ -1,7 +1,9 @@
+from operator import indexOf
 import numpy as np
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
+import functools
 
 regatta_names = ["nwisa-girls-qualifiers", "cascadia-cup-gold", "2022-issa-pcisa-all-girls-invitational",
                  "pontiac-bay-regional-south-regional", "fall-champs", "2022-atlantic-coast"]
@@ -219,6 +221,7 @@ for i, regatta in enumerate(regatta_names):
 
 # print(people)
 
+
 names = ["Elliott Chalcraft", 'Carter Anderson'] 
 Type = "points"
 plt.figure(figsize=(20, 5))
@@ -226,50 +229,77 @@ plt.figure(figsize=(20, 5))
 # ax1 = fig.add_subplot(111)
 # plt.bar(ind, person1, width, label=name1)
 # plt.bar(ind2 + width, person2, width, label=name2)
+# print(getData(Type, "Elliott Chalcraft", None,
+#       None, None, None, 'girls quals'), "\n")
+
 ind = 0
 data = []
 venues = []
 
-print(getData(Type, "Elliott Chalcraft", None,
-      None, None, None, 'girls quals'), "\n")
+# sorted(l, key=functools.cmp_to_key(compare))
+
+def compare(first, second):
+    print("First", first, "Second", second)
+    # fKeys = list(first.keys())
+    # sKeys = list(second.keys())
+    if first[len(first) - 1] > second[len(second) - 1]:
+        return 1
+    #B > A
+    elif first[len(first) - 2] > second[len(second) - 2]:
+        return - 1
+        # elif indexOf(better_names, first[0:len(first)-3]) > indexOf(better_names, first[0:len(first)-3]):
+        #     return - 1
+        # elif indexOf(better_names, first[0:len(first)-3]) < indexOf(better_names, first[0:len(first)-3]):
+        #     return 1
+    else:
+        return 0
 
 prev = 0
 for regatta in better_names:
+    dataLengths = []
     for i, p in enumerate(names):
-        # print("plotting", p, "\n")
+        print(f"plotting {p} for {regatta} prev:{prev} \n")
         try:
             data.append(getData(Type, p, None, None, None, None, regatta))
             # print(data)
             print(p, data[len(data) - 1], "\n")
-            for v in data[len(data) - 1].keys():
-                venues.append(v)
-            print(venues)
-            if i == 0:
-                ind = np.arange(len(data[0]))
+            # for v in data[len(data) - 1].keys():
+            #     venues.append(v)
+            # print(venues)
+            # if i == 0:
+            #     ind = np.arange(len(data[0]))
         except:
             print("Couldn't find person 👀")
 
-        pData = data[len(data) - 1].values()
+        pData = list(data[len(data) - 1].keys())
+        print("Pdata",pData)
+        pData = sorted(pData, key=functools.cmp_to_key(compare))
+        print("Pdata",pData)
+        venues.extend(pData)
+
+        # list out x values tied with race names
+        # attach same x value to next person if same name
+        # graph each person with new x values
+
+
         x = range(prev, prev + len(pData))
-        y = pData
-        prev += len(pData)
+        y = [data[len(data) - 1][i] for i in pData]
+        dataLengths.append(len(pData))
+        # if i == len(names) - 1:
+            
         plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}')
 
-    x = range(len(data[len(data) - 1]))
-    y = data[len(data) - 1]
+    # x = list(range(len(data[len(data) - 1].values())))
+    # y = list(data[indexOf(dataLengths, max(dataLengths))].values())
+    prev += max(dataLengths)
+    dataLengths = []
+    # print("HAI",x,y)
     # plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
-# plt.xticks(range(len(venues)), venues, rotation=90)
-
-# x = ind2
-# y = person2
-# plt.scatter(x, y)
-# plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
+plt.xticks(range(len(venues)), venues, rotation=90)
 
 # print(getVenues)
 
-# plt.xticks(ind + width / 2, [venues[i+1] for i in range(len(venues)-1)])
 plt.ylabel("Points (Higher is better)")
-# plt.legend([names[0]])  # , None, names[1], None]
 plt.legend(loc="upper right")
 plt.subplots_adjust(bottom=0.25)
 plt.savefig("fig.png")
