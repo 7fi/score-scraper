@@ -80,9 +80,6 @@ def getData(type, name, fleet, division, position, pair, regatta):
                     # racenum++
         return data
 
-        return next([(len(race.teams) - race.score + 1) for race in p.races]
-                    for p in people if p.name == name)
-
 
 def getVenues(name):
     return next([race.venue for race in p.races]for p in people if p.name == name)
@@ -169,8 +166,6 @@ for i, regatta in enumerate(regatta_names):
             raceNums = skipper.next_sibling.text.split(",")
             raceNums = [i.split("-", 1) for i in raceNums]
             addPerson(skipper.text.split(" '")[0],"Skipper",'A', teamHome, raceNums, teamAScores, teamHomes, betterVenue)
-            # teamASkippers.append(
-            #     person(skipper.text.split(" '")[0], "skipper", raceNums, races))
 
         for crew in teamNameEl.parent.find_all('td', class_="crew"):
             races = crew.next_sibling.text.split(",")
@@ -222,19 +217,13 @@ for i, regatta in enumerate(regatta_names):
                     addPerson(crew3.text.split(" '")[0],"Crew",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
 
 def compare(first, second):
-    # print("First", first, "Second", second)
-    #B > A
     if first[len(first) - 1] > second[len(second) - 1]:
-        # print("putting ahead #")
         return 1
     if first[len(first) - 1] < second[len(second) - 1]:
-        # print("putting behind #")
         return - 1
     if first[len(first) - 2] > second[len(second) - 2]:
-        # print("putting ahead L")
         return 1
     if first[len(first) - 2] < second[len(second) - 2]:
-        # print("putting behind L")
         return - 1
     else:
         return 0
@@ -242,6 +231,8 @@ def compare(first, second):
 names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3", "Ryan Downey": "#2de00d", "Sabrina Anderson": "#d20de0"}
 Type = "raw"
 nameLabels = []
+
+plt.figure(figsize=(20, 5))
 
 prev = 0
 xTicks = []
@@ -257,43 +248,35 @@ for regatta in better_names:
             print("Couldn't find person 👀")
     races = sorted([*set(races)], key=functools.cmp_to_key(compare))
 
-    # list out x values tied with race names
-    # attach same x value to next person if same name
-    # graph each person with new x values
-
     for p in list(names.keys()):
         print(races, data[p])
         x = sorted([indexOf(races,race) + prev for race in list(data[p].keys()) if race in races])
         y = [data[p][race] for race in races if race in data[p]]
         print(p,x, y)
-        # if pData.get(p) == None:
-        #     pData[p] = []
-        # pData[p].extend(y)
+        # if pData
         if x != [] and y != []:
-            plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p], alpha=0.5, zorder=1)
+            plt.scatter(x, y, color=names[p], alpha=0.5, zorder=1) #label=f'{p.split(" ", 1)[0]} {regatta}',
             if p not in nameLabels:
                 nameLabels.append(p)
-            # xnew = np.linspace(min(x), max(x), 300)  
-            # spl = make_interp_spline(x, y, k=3)  # type: BSpline
-            # ynew = spl(xnew)
-            # plt.plot(xnew, ynew, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p], alpha=0.5, zorder=0)
+            if len(x) > 3:
+                xnew = np.linspace(min(x), max(x), 300)  
+                spl = make_interp_spline(x, y, k=3)  # type: BSpline
+                ynew = spl(xnew)
+                plt.plot(xnew, ynew, color=names[p], alpha=0.5, zorder=0)
+                nameLabels.append("_")
+            plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)), color=names[p])
+            nameLabels.append("_")
+            
 
-    # prev += int(max([len(x) for x in data]) / 2)
+
     prev += len(races)
     xTicks.extend(races)
-
-# for p in names:
-#     plt.scatter(range(len(pData[p])), pData[p], label=f'{p.split(" ", 1)[0]} {regatta}')
-
-# plt.xticks 
 plt.xticks(range(len(xTicks)), xTicks, rotation=90)
 plt.yticks(np.arange(25))
 # plt.ylabel("Points (Higher is better)")
-# plt.figure(figsize=(20, 5))
 plt.legend(nameLabels,loc="upper right") #list(names.keys()
-# plt.tight_layout()
+plt.tight_layout()
 plt.grid(True)
-plt.subplots_adjust(bottom=0.25)
 plt.savefig("fig.png")
 
 plt.show()
