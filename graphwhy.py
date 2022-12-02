@@ -219,88 +219,70 @@ for i, regatta in enumerate(regatta_names):
                     races = [i.split("-", 1) for i in races]
                     addPerson(crew3.text.split(" '")[0],"Crew",'B', teamHome, races, teamAScores, teamHomes, betterVenue)
 
-# print(people)
-
-
-names = ["Elliott Chalcraft", 'Carter Anderson'] 
-Type = "points"
-plt.figure(figsize=(20, 5))
-# fig = plt.figure()
-# ax1 = fig.add_subplot(111)
-# plt.bar(ind, person1, width, label=name1)
-# plt.bar(ind2 + width, person2, width, label=name2)
-# print(getData(Type, "Elliott Chalcraft", None,
-#       None, None, None, 'girls quals'), "\n")
-
-ind = 0
-data = []
-venues = []
-
-# sorted(l, key=functools.cmp_to_key(compare))
-
 def compare(first, second):
-    print("First", first, "Second", second)
-    # fKeys = list(first.keys())
-    # sKeys = list(second.keys())
-    if first[len(first) - 1] > second[len(second) - 1]:
-        return 1
+    # print("First", first, "Second", second)
     #B > A
-    elif first[len(first) - 2] > second[len(second) - 2]:
+    if first[len(first) - 1] > second[len(second) - 1]:
+        # print("putting ahead #")
+        return 1
+    if first[len(first) - 1] < second[len(second) - 1]:
+        # print("putting behind #")
         return - 1
-        # elif indexOf(better_names, first[0:len(first)-3]) > indexOf(better_names, first[0:len(first)-3]):
-        #     return - 1
-        # elif indexOf(better_names, first[0:len(first)-3]) < indexOf(better_names, first[0:len(first)-3]):
-        #     return 1
+    if first[len(first) - 2] > second[len(second) - 2]:
+        # print("putting ahead L")
+        return 1
+    if first[len(first) - 2] < second[len(second) - 2]:
+        # print("putting behind L")
+        return - 1
     else:
         return 0
 
+names = {"Elliott Chalcraft": "#1e7536", 'Carter Anderson':"#3684a3"}
+Type = "points"
+
 prev = 0
+xTicks = []
+pData = {}
 for regatta in better_names:
-    dataLengths = []
-    for i, p in enumerate(names):
-        print(f"plotting {p} for {regatta} prev:{prev} \n")
+    data = {}
+    races = []
+    for p in list(names.keys()):
         try:
-            data.append(getData(Type, p, None, None, None, None, regatta))
-            # print(data)
-            print(p, data[len(data) - 1], "\n")
-            # for v in data[len(data) - 1].keys():
-            #     venues.append(v)
-            # print(venues)
-            # if i == 0:
-            #     ind = np.arange(len(data[0]))
+            data[p] = getData(Type, p, None, None, None, None, regatta)
         except:
             print("Couldn't find person 👀")
+        races.extend(list(data[p].keys()))
+    races = sorted([*set(races)], key=functools.cmp_to_key(compare))
 
-        pData = list(data[len(data) - 1].keys())
-        print("Pdata",pData)
-        pData = sorted(pData, key=functools.cmp_to_key(compare))
-        print("Pdata",pData)
-        venues.extend(pData)
+    # list out x values tied with race names
+    # attach same x value to next person if same name
+    # graph each person with new x values
 
-        # list out x values tied with race names
-        # attach same x value to next person if same name
-        # graph each person with new x values
+    for p in list(names.keys()):
+        print(races)
+        x = [indexOf(races,race) + prev for race in list(data[p].keys()) if race in races]
+        y = [data[p][race] for race in races if race in data[p]]
+        print(x, y)
+        # if pData.get(p) == None:
+        #     pData[p] = []
+        # pData[p].extend(y)
+        plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p])
 
+    # prev += int(max([len(x) for x in data]) / 2)
+    prev += len(races)
+    xTicks.extend(races)
 
-        x = range(prev, prev + len(pData))
-        y = [data[len(data) - 1][i] for i in pData]
-        dataLengths.append(len(pData))
-        # if i == len(names) - 1:
-            
-        plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}')
+# for p in names:
+#     plt.scatter(range(len(pData[p])), pData[p], label=f'{p.split(" ", 1)[0]} {regatta}')
 
-    # x = list(range(len(data[len(data) - 1].values())))
-    # y = list(data[indexOf(dataLengths, max(dataLengths))].values())
-    prev += max(dataLengths)
-    dataLengths = []
-    # print("HAI",x,y)
-    # plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)))
-plt.xticks(range(len(venues)), venues, rotation=90)
-
-# print(getVenues)
-
-plt.ylabel("Points (Higher is better)")
-plt.legend(loc="upper right")
+# plt.xticks 
+plt.xticks(range(len(xTicks)), xTicks, rotation=90)
+# plt.ylabel("Points (Higher is better)")
+# plt.figure(figsize=(20, 5))
+plt.legend(list(names.keys()),loc="upper right")
+plt.tight_layout()
+plt.grid(True)
 plt.subplots_adjust(bottom=0.25)
 plt.savefig("fig.png")
+
 plt.show()
