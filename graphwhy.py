@@ -1,9 +1,11 @@
 from operator import indexOf
+import functools
 import numpy as np
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
-import functools
+from scipy.interpolate import make_interp_spline, BSpline
+
 
 regatta_names = ["nwisa-girls-qualifiers", "cascadia-cup-gold", "2022-issa-pcisa-all-girls-invitational",
                  "pontiac-bay-regional-south-regional", "fall-champs", "2022-atlantic-coast"]
@@ -62,9 +64,6 @@ def addPerson(name, pos, division, home, raceNums, scores, teams, venue):
 
 def getData(type, name, fleet, division, position, pair, regatta):
     if type == "raw":
-        return next([race.score for race in p.races]
-                    for p in people if p.name == name)
-    if type == "points":
         data = {}
         for p in people:
             if p.name == name:
@@ -72,7 +71,10 @@ def getData(type, name, fleet, division, position, pair, regatta):
                 for r in p.races:
                     # print(r.score)
                     if r.venue == regatta:
-                        data[f"{regatta} {r.division}{r.number}"] = r.score
+                        if isinstance(r.score, int):
+                            data[f"{regatta} {r.division}{r.number}"] = r.score
+                        else:
+                            data[f"{regatta} {r.division}{r.number}"] = len(r.teams) + 1
                     # data[f"{regatta} race {r.number}"] = len(
                     #     r.teams) - r.score + 1
                     # racenum++
@@ -204,7 +206,7 @@ for i, regatta in enumerate(regatta_names):
         for crew in teamNameEl.parent.find_all('td', class_="crew"):
             races = crew.next_sibling.text.split(",")
             races = [i.split("-", 1) for i in races]
-            addPerson(crew.text.split(" '")[0],"Crew",'B', teamHome, races, teamAScores, teamHomes, betterVenue)
+            addPerson(crew.text.split(" '")[0],"Crew",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
             if crew.parent.next_sibling and crew.parent.next_sibling.find_all('td', class_="crew"):
                 crew2 = crew.parent.next_sibling.find(
                     'td', class_="crew")
@@ -237,8 +239,9 @@ def compare(first, second):
     else:
         return 0
 
-names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3"}
-Type = "points"
+names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3", "Ryan Downey": "#2de00d", "Sabrina Anderson": "#d20de0"}
+Type = "raw"
+nameLabels = []
 
 prev = 0
 xTicks = []
@@ -249,9 +252,9 @@ for regatta in better_names:
     for p in list(names.keys()):
         try:
             data[p] = getData(Type, p, None, None, None, None, regatta)
+            races.extend(list(data[p].keys()))
         except:
             print("Couldn't find person 👀")
-        races.extend(list(data[p].keys()))
     races = sorted([*set(races)], key=functools.cmp_to_key(compare))
 
     # list out x values tied with race names
@@ -259,14 +262,21 @@ for regatta in better_names:
     # graph each person with new x values
 
     for p in list(names.keys()):
-        print(races)
-        x = [indexOf(races,race) + prev for race in list(data[p].keys()) if race in races]
+        print(races, data[p])
+        x = sorted([indexOf(races,race) + prev for race in list(data[p].keys()) if race in races])
         y = [data[p][race] for race in races if race in data[p]]
-        print(x, y)
+        print(p,x, y)
         # if pData.get(p) == None:
         #     pData[p] = []
         # pData[p].extend(y)
-        plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p])
+        if x != [] and y != []:
+            plt.scatter(x, y, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p], alpha=0.5, zorder=1)
+            if p not in nameLabels:
+                nameLabels.append(p)
+            # xnew = np.linspace(min(x), max(x), 300)  
+            # spl = make_interp_spline(x, y, k=3)  # type: BSpline
+            # ynew = spl(xnew)
+            # plt.plot(xnew, ynew, label=f'{p.split(" ", 1)[0]} {regatta}', color=names[p], alpha=0.5, zorder=0)
 
     # prev += int(max([len(x) for x in data]) / 2)
     prev += len(races)
@@ -277,10 +287,11 @@ for regatta in better_names:
 
 # plt.xticks 
 plt.xticks(range(len(xTicks)), xTicks, rotation=90)
+plt.yticks(np.arange(25))
 # plt.ylabel("Points (Higher is better)")
 # plt.figure(figsize=(20, 5))
-plt.legend(list(names.keys()),loc="upper right")
-plt.tight_layout()
+plt.legend(nameLabels,loc="upper right") #list(names.keys()
+# plt.tight_layout()
 plt.grid(True)
 plt.subplots_adjust(bottom=0.25)
 plt.savefig("fig.png")
