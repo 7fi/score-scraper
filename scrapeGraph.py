@@ -11,8 +11,10 @@ regatta_names = ["nwisa-girls-qualifiers", "cascadia-cup-gold", "2022-issa-pcisa
                  "pontiac-bay-regional-south-regional", "fall-champs", "2022-atlantic-coast"]
 better_names = ["girls quals", "cascadia gold", "PCISA girls",
                 "south regional", "fall champs", "ACCs"]
-# regatta_names = ["nwisa-girls-qualifiers"]
-# better_names = ["girls quals"]
+names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3", "Ryan Downey": "#2de00d", "Sabrina Anderson": "#d20de0"}
+Type = "points"
+
+people = []
 
 
 class person:
@@ -20,8 +22,6 @@ class person:
         self.name = name
         self.team = team
         self.races = races
-        # self.raceNums = []
-            # print(self.races)
 
     def __repr__(self):
         return f"{self.name} {self.team} {self.races}"
@@ -37,8 +37,6 @@ class race:
 
     def __repr__(self):
         return f"#: {self.number} D:{self.division} s:{self.score} t:{len(self.teams)} {self.position}"
-
-people = []
 
 def addPerson(name, pos, division, home, raceNums, scores, teams, venue):
     newNums = []
@@ -63,31 +61,41 @@ def addPerson(name, pos, division, home, raceNums, scores, teams, venue):
                         i + 1, division, score, [t for t in teams], pos, venue))
 
 def getData(type, name, fleet, division, position, pair, regatta):
-    if type == "raw":
-        data = {}
-        for p in people:
-            if p.name == name:
-                # racenum = 0
-                for r in p.races:
-                    # print(r.score)
-                    if r.venue == regatta:
+    data = {}
+    for p in people:
+        if p.name == name:
+            # racenum = 0
+            for r in p.races:
+                # print(r.score)
+                if r.venue == regatta:
+                    if type == "raw":
                         if isinstance(r.score, int):
                             data[f"{regatta} {r.division}{r.number}"] = r.score
                         else:
                             data[f"{regatta} {r.division}{r.number}"] = len(r.teams) + 1
-                    # data[f"{regatta} race {r.number}"] = len(
-                    #     r.teams) - r.score + 1
-                    # racenum++
-        return data
+                    if type == "points":
+                        if isinstance(r.score, int):
+                            data[f"{regatta} {r.division}{r.number}"] = len(r.teams) - r.score + 1
+                        else:
+                            data[f"{regatta} {r.division}{r.number}"] = len(r.teams) + 1
+                    if type == "ratio":
+                        if isinstance(r.score, int):
+                            data[f"{regatta} {r.division}{r.number}"] = 1 - (r.score / len(r.teams))
+                        else:
+                            data[f"{regatta} {r.division}{r.number}"] = len(r.teams) + 1
+    return data
 
-
-def getVenues(name):
-    return next([race.venue for race in p.races]for p in people if p.name == name)
-
-
-def getDataByVenue(name, rregatta):
-    return next([(len(race.teams) - race.score + 1) for race in p.races if race.venue == rregatta]
-                for p in people if p.name == name)
+def compare(first, second):
+    if first[len(first) - 1] > second[len(second) - 1]:
+        return 1
+    if first[len(first) - 1] < second[len(second) - 1]:
+        return - 1
+    if first[len(first) - 2] > second[len(second) - 2]:
+        return 1
+    if first[len(first) - 2] < second[len(second) - 2]:
+        return - 1
+    else:
+        return 0
 
 for i, regatta in enumerate(regatta_names):
     betterVenue = better_names[i]
@@ -123,8 +131,6 @@ for i, regatta in enumerate(regatta_names):
     teamCount = int(len(scoreData) / 3)
 
     teamHomes = [(scoreData[(i*3) - 3].find('a').text) for i in range(teamCount)]
-
-    teams = []
 
     # loop through teams
     for i in range(1, teamCount):
@@ -216,27 +222,13 @@ for i, regatta in enumerate(regatta_names):
                     races = [i.split("-", 1) for i in races]
                     addPerson(crew3.text.split(" '")[0],"Crew",'B', teamHome, races, teamBScores, teamHomes, betterVenue)
 
-def compare(first, second):
-    if first[len(first) - 1] > second[len(second) - 1]:
-        return 1
-    if first[len(first) - 1] < second[len(second) - 1]:
-        return - 1
-    if first[len(first) - 2] > second[len(second) - 2]:
-        return 1
-    if first[len(first) - 2] < second[len(second) - 2]:
-        return - 1
-    else:
-        return 0
-
-names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson':"#3684a3", "Ryan Downey": "#2de00d", "Sabrina Anderson": "#d20de0"}
-Type = "raw"
-nameLabels = []
-
 plt.figure(figsize=(20, 5))
 
 prev = 0
 xTicks = []
-pData = {}
+nameLabels = []
+maxVals = []
+
 for regatta in better_names:
     data = {}
     races = []
@@ -244,6 +236,7 @@ for regatta in better_names:
         try:
             data[p] = getData(Type, p, None, None, None, None, regatta)
             races.extend(list(data[p].keys()))
+            maxVals.append(max(list(data[p].values())))
         except:
             print("Couldn't find person 👀")
     races = sorted([*set(races)], key=functools.cmp_to_key(compare))
@@ -258,7 +251,7 @@ for regatta in better_names:
             plt.scatter(x, y, color=names[p], alpha=0.5, zorder=1) #label=f'{p.split(" ", 1)[0]} {regatta}',
             if p not in nameLabels:
                 nameLabels.append(p)
-            if len(x) > 3:
+            if len(x) > 3 and Type != "ratio":
                 xnew = np.linspace(min(x), max(x), 300)  
                 spl = make_interp_spline(x, y, k=3)  # type: BSpline
                 ynew = spl(xnew)
@@ -266,15 +259,21 @@ for regatta in better_names:
                 nameLabels.append("_")
             plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)), color=names[p])
             nameLabels.append("_")
-            
-
 
     prev += len(races)
     xTicks.extend(races)
+
+plt.xlim([-1,len(xTicks)])
+if Type == "Ratio":
+    plt.ylim([0, 1])
+    plt.yticks(np.arange(0,1, 0.1))
+else:
+    plt.yticks(np.arange(0, max(maxVals) + 1, 2))
+    plt.ylim([0, max(maxVals) + 1])
+
 plt.xticks(range(len(xTicks)), xTicks, rotation=90)
-plt.yticks(np.arange(25))
-# plt.ylabel("Points (Higher is better)")
-plt.legend(nameLabels,loc="upper right") #list(names.keys()
+plt.ylabel(Type)
+plt.legend(nameLabels,loc="upper right")
 plt.tight_layout()
 plt.grid(True)
 plt.savefig("fig.png")
