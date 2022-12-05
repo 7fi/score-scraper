@@ -1,5 +1,5 @@
 
 .DS_Store
 *.csv
-.vscode/launch.json
+.vscode
 *.png
