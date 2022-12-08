@@ -18,7 +18,7 @@ regattas = {"south regional": "s22/south-regional-nwisa",  "oak gold": "s22/isla
 names = {"Elliott Chalcraft": "#e0570d", 'Carter Anderson': "#3684a3",
          "Ryan Downey": "#2de00d", "Sabrina Anderson": "#d20de0", "Barrett Lhamon": "#f00"}
 # Raw Points Ratio
-Type = "Ratio"
+Type = "Points"
 people = []
 
 
